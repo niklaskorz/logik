@@ -1,0 +1,29 @@
+pythagoras := procedure(n) {
+    N := { 1 .. n };
+    return { [a, b, c] : a in N, b in N, c in N | a < b && a * a + b * b == c * c };
+};
+
+t := procedure(n) {
+    return { d : d in { 1 .. n } | n % d == 0};
+};
+
+gt := procedure(a, b, c) {
+    return t(a) * t(b) * t(c);
+};
+
+ggt := procedure(a, b, c) {
+    return max(gt(a, b, c));
+};
+
+isReduced := procedure(triple) {
+    a := triple[1];
+    b := triple[2];
+    c := triple[3];
+    return ggt(a, b, c) == 1;
+};
+
+reducedPythagoras := procedure(n) {
+    return { triple : triple in pythagoras(n) | isReduced(triple) };
+};
+
+print(reducedPythagoras(50));

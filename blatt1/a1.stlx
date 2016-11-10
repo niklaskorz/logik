@@ -1,0 +1,14 @@
+echteTeiler := procedure(n) {
+    return { m : m in { 1 .. n - 1 } | n % m == 0 };
+};
+
+isPerfect := procedure(n) {
+    return n == +/ echteTeiler(n);
+};
+
+perfectNumbers := procedure(max) {
+    return { p : p in { 1 .. max - 1 } | isPerfect(p) };
+};
+
+print(perfectNumbers(10000));
+// => { 6, 28, 496, 8128 }

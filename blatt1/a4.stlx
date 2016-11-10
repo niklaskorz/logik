@@ -1,0 +1,37 @@
+// M: Input set
+// k: Length of subsets
+// Return value: Set of subsets of M that include k elements
+// Rekursiv
+subsets := procedure(M, k) {
+    if (k == 0) {
+        return { {} };
+    }
+    return { Q + { x } : Q in subsets(M, k - 1), x in M | !(x in Q) };
+};
+
+// Potenzmenge von M
+// Teiliterativ (unter Wiederverwendung von subsets)
+power := procedure(M) {
+    P := { {} };
+    i := #M;
+    while (i > 0) {
+        P += subsets(M, i);
+        i -= 1;
+    }
+    return P;
+};
+
+// Potenzmenge von M
+// Rekursiv
+powerRecursive := procedure(M) {
+    if (M == {}) {
+        return { M };
+    }
+    Q := { max(M) };
+    P := powerRecursive(M - Q);
+    return P + { L + Q : L in P };
+};
+
+M := {2, 4, 6, 8};
+print(subsets(M, 3));
+print(powerRecursive(M) == 2 ** M );

@@ -1,0 +1,11 @@
+t := procedure(n) {
+    return { d : d in { 1 .. n } | n % d == 0};
+};
+
+gt := procedure(m, n) {
+    return t(m) * t(n);
+};
+
+ggt := procedure(m, n) {
+    return max(gt(m, n));
+};

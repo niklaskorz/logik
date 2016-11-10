@@ -1,0 +1,5 @@
+kgv := procedure(m, n) {
+    return min({ x : x in { 1 .. m * n } | x % m == 0 && x % n == 0 });
+};
+
+print(kgv(15, 130));
