@@ -1,0 +1,81 @@
+
+/////////////////////////////////////////////////////////////////////////////////
+//                                                                            //
+// The following procedures find a path in a given graph if there is one.     //
+//                                                                            //
+////////////////////////////////////////////////////////////////////////////////
+
+findPath := procedure(start, goal, R) {
+    paths    := { [start] };
+    states   := { start };   // reachable states
+    explored := {};          // explored states
+    while (states != explored) {
+        explored := states;
+        paths    := { l : l in pathProduct(paths, R) | !(l[-1] in states) };
+        paths    := clean(paths);
+        states   += { l[-1] : l in paths };
+        if (goal in states) {
+            return arb({ l : l in paths | l[-1] == goal });
+        }
+    }
+};
+
+// The procedure call product(p, q) computes the path product p * q.
+pathProduct := procedure(p, q) {
+    return { x + [ y[2] ] : x in p, y in q | x[-1] == y[1] };
+};
+
+// remove redundant paths
+clean := procedure(paths) {
+    states := { k[-1] : k in paths };
+    return { arb({ k : k in paths | k[-1] == s }) : s in states };
+};
+//////////////////////////////////////////////////////////////////////////
+//                                                                      //
+// The following procedure are only needed to print the solution in a   //
+// readable way.                                                        //
+//                                                                      //
+//////////////////////////////////////////////////////////////////////////
+
+// This procedure prints the solution.
+printPath := procedure(path) {
+    print("Solution:\n");
+    for ([a, b] in path) {
+        printState(a, b);
+    }
+};
+
+printState := procedure(a, b) {
+    print("A (max 5l): ", a, "; B (max 3l): ", b);
+};
+
+////////////////////////////////////////////////////////////////////////////////
+//                                                                            //
+// Some auxilliary procedure.                                                 //
+//                                                                            //
+////////////////////////////////////////////////////////////////////////////////
+
+// Erlaubte Operationen
+// 1. Eimer (5l oder 3l) komplett füllen aus Fass
+// 2. Eimer leeren in Fass
+// 3. Eimer umfüllen in anderen Eimer (maximal bis anderer Eimer voll)
+
+P := { [a, b] : a in { 0 .. 5 }, b in { 0 .. 3 } };
+// Übergänge
+R := {
+    [[a1, b1], [a2, b2]] : [a1, b1] in P, [a2, b2] in P |
+    (a2 in { 0, 5, a1 } && b2 in { 0, 3, b1 }) || // Auffuellung / Leerung Fass
+    (a1 + b1 == a2 + b2 && (a2 == 5 || b2 == 0 || b2 == 3 || a2 == 0)) // Umfuellungen
+};
+
+start := [0, 0];
+goal := [4, 0];
+
+Path := findPath(start, goal, R);
+
+if (Path != om) {
+    print("Anzahl der Schritte: $#Path - 1$");
+    printPath(Path);
+} else {
+    print("No solution found!");
+}
