@@ -64,8 +64,11 @@ P := { [a, b] : a in { 0 .. 5 }, b in { 0 .. 3 } };
 // Übergänge
 R := {
     [[a1, b1], [a2, b2]] : [a1, b1] in P, [a2, b2] in P |
-    (a2 in { 0, 5, a1 } && b2 in { 0, 3, b1 }) || // Auffuellung / Leerung Fass
-    (a1 + b1 == a2 + b2 && (a2 in { 5, 0 } || b2 in { 3, 0 })) // Umfuellungen
+    [a1, b1] != [a2, b2] && (
+        (b2 == b1 && a2 in { 0, 5 }) || // Fass 1 auffuellen oder leeren
+        (a2 == a1 && b2 in { 0, 3 }) || // Fass 2 auffuellen oder leeren
+        (a1 + b1 == a2 + b2 && (a2 in { 5, 0 } || b2 in { 3, 0 })) // Umfuellungen
+    )
 };
 
 start := [0, 0];
