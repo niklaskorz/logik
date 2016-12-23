@@ -42,14 +42,13 @@ exactlyOne := procedure(s) {
 // genau dann wahr, wenn in dem i-ten Zimmer ein Tiger ist.  Die Variable
 //     Z(i)    ist für i in { 1, ..., n }
 // genau dann wahr, wenn die Aufschrift des i-ten Zimmers wahr ist.  Die Variable
-//     w       
+//     W() 
 // ist genau dann wahr, wenn alle Aufschriften an leeren Zimmern wahr sind.
 computeClauses := procedure() {
     n := 9;
     // Die Prinzessin muss irgendwo sein und
     // es gibt nur eine Prinzessin.
     clauses := exactlyOne({ @P(i) : i in { 1 .. n } });
-    print(clauses);
     // Der König sagt: In dem Zimmer, wo die Prinzessin ist, ist die Aufschrift wahr. 
     clauses += +/ { parseKNF("@P($i$) => @Z($i$)") : i in { 1 .. n } };
     // In Zimmern wo Tiger drin sind, ist die Aufschrift falsch.  
