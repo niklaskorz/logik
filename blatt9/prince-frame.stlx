@@ -15,6 +15,19 @@ parseKNF := procedure(f) {
     return normalize(parseTerm(f));
 };
 
+// Utility functions
+
+atMostOne := procedure(s) {
+    return { { !p, !q } : p in s, q in s | p != q };
+};
+
+atLeastOne := procedure(s) {
+    return { s };
+};
+
+exactlyOne := procedure(s) {
+    return atLeastOne(s) + atMostOne(s);
+};
 
 // Aufgabe: Der König führt den Prinzen in einen Raum mit 9 Türen. An
 // jeder Tür hängt ein Schild. In einem Zimmer ist eine Prinzessin, jedes
@@ -32,41 +45,42 @@ parseKNF := procedure(f) {
 //     w       
 // ist genau dann wahr, wenn alle Aufschriften an leeren Zimmern wahr sind.
 computeClauses := procedure() {
-    // Die Prinzessin muss irgendwo sein
-    clauses := "?";
-    // Es gibt nur eine Prinzessin.
-    clauses += "?";
+    n := 9;
+    // Die Prinzessin muss irgendwo sein und
+    // es gibt nur eine Prinzessin.
+    clauses := exactlyOne({ @P(i) : i in { 1 .. n } });
+    print(clauses);
     // Der König sagt: In dem Zimmer, wo die Prinzessin ist, ist die Aufschrift wahr. 
-    clauses += "?";
+    clauses += +/ { parseKNF("@P($i$) => @Z($i$)") : i in { 1 .. n } };
     // In Zimmern wo Tiger drin sind, ist die Aufschrift falsch.  
-    clauses += "?";
+    clauses += +/ { parseKNF("@T($i$) => !@Z($i$)") : i in { 1 .. n } } ;
     // 1. Zimmer: Prinzessin ist in einem Zimmer mit ungerader Zimmernummer.
     //            In den Zimmern mit gerader Nummer ist kein Tiger.
-    clauses += "?";
+    clauses += +/ { parseKNF("@Z(1) => (@P($i$) => $i$ % 2 != 0) && ($i$ % 2 == 0 => !@T($i$))") : i in { 1 .. n } };
     // 2. Zimmer: Dieses Zimmer ist leer.
-    clauses += "?";
+    clauses += parseKNF("@Z(2) => !@P(2) && !@T(2)");
     // 3. Zimmer: Die Aufschrift an Zimmer 5 ist wahr, die Aufschrift an Zimmer 7 ist falsch
     //            und in Zimmer 3 ist ein Tiger. 
-    clauses += "?"; 
+    clauses += parseKNF("@Z(3) => @Z(5) && !@Z(7) && @T(3)"); 
     // 4. Zimmer: Die Aufschrift an Zimmer 1 ist falsch, in Zimmer 8 ist kein Tiger,
     //            und die Aufschrift an Zimmer 9 ist richtig.
-    clauses += "?";
+    clauses += parseKNF("@Z(4) => !@Z(1) && !@T(8) && @Z(9)");
     // 5. Zimmer: Wenn die Aufschrift an Zimmer 2 oder an Zimmer 4 wahr ist,
     //            dann ist kein Tiger im Zimmer 1.
-    clauses += "?";
+    clauses += parseKNF("@Z(5) => ((@Z(2) || @Z(4)) => !@T(1))");
     // 6. Zimmer: Die Aufschrift an Zimmer 3 ist falsch, die Prinzessin ist im Zimmer 2 
     //            und im Zimmer 2 ist kein Tiger.
-    clauses += "?";
+    clauses += parseKNF("@Z(6) => !@Z(3) && @P(2) && !@T(2)");
     // 7. Zimmer: Die Prinzessin ist im Zimmer 1 und die Aufschrift an Zimmer 5 ist wahr.
-    clauses += "?";
+    clauses += parseKNF("@Z(7) => @P(1) && @Z(5)");
     // 8. Zimmer: In diesem Zimmer ist kein Tiger und Zimmer 9 ist leer.
-    clauses += "?";
+    clauses += parseKNF("@Z(8) => !@T(8) && !@P(9) && !@T(9)");
     // 9. Zimmer: Weder in diesem Zimmer noch in Zimmer 1 ist ein Tiger und die Aufschrift 
     //            an Zimmer 6 ist wahr.
-    clauses += "?";
+    clauses += parseKNF("@Z(9) => !T(9) && !@T(1) && @Z(6)");
     // Entweder sind alle Aufschriften an leeren Zimmern wahr, oder alle Aufschriften an
     // leeren Zimmern sind falsch.
-    clauses += "?";
+    clauses += +/ { parseKNF("(!@P($i$) && !@T($i$)) => @Z($i$) == @W()") : i in { 1 .. n } };
     return clauses;
 };
 // s is a set of propositional variables. The call atMostOne(s) creates
