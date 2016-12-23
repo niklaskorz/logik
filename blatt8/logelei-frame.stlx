@@ -1,0 +1,148 @@
+loadLibrary("termUtilities");
+load("knf.stlx");
+load("davis-putnam.stlx");
+
+// Parse a propositional formula and transform the result into a conjunctive
+// normal form in set notation.
+parseKNF := procedure(f) {
+    return normalize(parseTerm(f));
+};
+
+////////////////////////////////////////////////////////////////////////////////
+//                                                                            //
+// Die folgende Aufgabe ist dem Buch "99 Logeleien von Zweistein", das im     //
+// Jahre 1974 erschienen ist, entnommen.                                      //
+//                                                                            //
+// Die Herren Amann, Bemann, Cemann und Demann heissen – nicht unbedingt      //
+// in derselben Reihenfolge – mit Vornamen Erich, Fritz, Gustav und Heinrich. //
+// Sie sind alle verheiratet. Ausserdem weiss man über sie und ihre Ehefrauen //
+// noch dies:                                                                 //
+//     1. Entweder ist Amanns Vorname Heinrich, oder Bemanns Frau heisst      //
+//        Inge.                                                               //
+//     2. Wenn Cemann mit Josefa verheiratet ist, dann – und nur in diesem    //
+//        Falle – heisst Klaras Mann nicht Fritz.                             //
+//     3. Wenn Josefas Mann nicht Erich heisst, dann ist Inge mit Fritz       //
+//        verheiratet.                                                        //
+//     3. Wenn Luises Mann Fritz heisst, dann ist der Vorname von Klaras Mann //
+//        nicht Gustav.                                                       //
+//     4. Wenn die Frau Von Fritz Inge heisst, dann ist Erich nicht mit       //
+//        Josefa verheiratet.                                                 //
+//     5. Wenn Fritz nicht mit Luise verheiratet ist, dann heisst Gustavs     //
+//        Frau Klara.                                                         //
+//     6. Entweder ist Demann mit Luise verheiratet, oder Cemann heisst       //
+//        Gustav.                                                             //
+// Wie heissen die Herren mit vollem Namen, wie ihre Ehefrauen mit Vornamen?  //
+//                                                                            //
+////////////////////////////////////////////////////////////////////////////////
+
+// Aussagenlogische Variablen:
+//
+// 1. @Name(vorname, nachname) wobei vorname  in { "Erich", "Fritz", "Gustav", "Heiner" },
+//                                   nachname in { "Amann", "Bemann", "Cemann", "Demann" }
+//    @Name(x, y) ist wahr, falls Herr y mit Vornamen x heisst.
+//
+// 2. @Ehe(mann, frau) wobei mann in { "Erich",  "Fritz", "Gustav", "Heiner" },
+//                           frau in { "Inge",  "Josefa", "Klara",  "Luise"  }
+
+// S is a set of propositional variables. The expression atMostOne(S) creates
+// a set of clauses.  This set expresses the fact that at most one of the
+// variables in the set S is true.
+atMostOne := procedure(s) {
+    return { { !p, !q } : p in s, q in s | p != q };
+};
+
+atLeastOne := procedure(s) {
+    return { s };
+};
+
+// For two sets a and b which must have the same number of elements, the
+// procedure exactlyOne(a, b, fct)  computes a set of clauses expressing the fact
+// that every element x from a corresponds to exactly one element y from b.
+// The third parameter fct is the name of a function symbol that is used to build
+// the propositional variable expressing that x relates to y.
+exactlyOne := procedure(a, b, fct) {
+    // Für alle x in a: es gibt y in b: <x, y> in R
+    // Für alle x in a: für alle y1, y2 in b: <x, y1> in R && <x, y2> in R => y1 == y2
+    return +/ { atLeastOne({ makeTerm(fct, [x, y]) : y in b }) : x in a }
+        + +/ { atMostOne({ makeTerm(fct, [x, y]) : y in b }) : x in a }
+        + +/ { atMostOne({ makeTerm(fct, [x, y]) : x in a }) : y in b };
+};
+
+// Return a formula that is true if y is the wife of z.  The formula is returned as
+// a string.  Note that here z is the family name of a man and not his first name.
+isWifeOf := procedure(v, y, z) {
+    // es existiert x aus Vornamen: @Name(x, z) && @Ehe(x, y)
+    result := "";
+    cnt := #v;
+    for (i in { 1 .. cnt }) {
+        x := from(v);
+        result += "(@Name($x$, $z$) && @Ehe($x$, $y$))";
+        if (i < cnt) {
+            result += "||";
+        }
+    }
+    return "($result$)";
+};
+// Compute the exclusive or of the formulas a and b, which are given as strings.
+// The resulting formula itself is converted into KNF.
+exclusiveOr := procedure(a, b) {
+    return parseKNF("($a$ <==> !$b$)");
+};
+// solution:
+// Erich  Demann ist mit Luise  verheiratet,
+// Fritz  Bemann ist mit Inge   verheiratet,
+// Gustav Amann  ist mit Klara  verheiratet,
+// Heiner Cemann ist mit Josefa verheiratet.
+computeClauses := procedure() {
+    vornamen  := { 1,  2,  3,  4 }; // { "Erich",  "Fritz", "Gustav", "Heiner" };
+    nachnamen := { 5,  6,  7,  8 }; // { "Amann", "Bemann", "Cemann", "Demann" };
+    frauen    := { 9, 10, 11, 12 }; // { "Inge",  "Josefa", "Klara",  "Luise"  };
+    // Jedem Vornamen ist genau ein Nachname zugeordnet.
+    clauses := exactlyOne(vornamen, nachnamen, "Name");
+    // Jeder Mann ist mit genau einer Frau verheiratet.
+    clauses += exactlyOne(vornamen, frauen, "Ehe");
+    // Entweder ist Amanns Vorname Heiner, oder Bemanns Frau heisst Inge.
+    clauses += exclusiveOr("@Name(4, 5)", isWifeOf(vornamen, 9, 6));
+    // Wenn Cemann mit Josefa verheiratet ist, dann – und nur in diesem Falle –
+    // heisst Klaras Mann nicht Fritz.
+    clauses += exclusiveOr(isWifeOf(vornamen, 10, 7), "@Ehe(2, 11)");
+    // Wenn Josefas Mann nicht Erich heisst, dann ist Inge mit Fritz verheiratet.
+    clauses += parseKNF("!@Ehe(1, 10) => @Ehe(2, 9)");
+    // Wenn Luises Mann Fritz heisst, dann ist der Vorname von Klaras Mann nicht Gustav.
+    clauses += parseKNF("@Ehe(2, 12) => !@Ehe(3, 11)");
+    // Wenn die Frau von Fritz Inge heisst, dann ist Erich nicht mit Josefa verheiratet.
+    clauses += parseKNF("@Ehe(2, 9) => !@Ehe(1, 10)");
+    // Wenn Fritz nicht mit Luise verheiratet ist, dann heisst Gustavs Frau Klara.
+    clauses += parseKNF("!@Ehe(2, 12) => @Ehe(3, 11)");
+    // Entweder ist Demann mit Luise verheiratet, oder Cemann heisst Gustav.
+    clauses += exclusiveOr(isWifeOf(vornamen, 12, 8), "@Name(3, 7)");
+    return clauses;
+};
+solve := procedure() {
+    clauses := computeClauses();
+    result  := davisPutnam(clauses, {});
+    displaySolution(result);
+};
+// Pretty print the solution.
+displaySolution := procedure(solution) {
+    Dictionary := { [1, "Erich"], [ 2, "Fritz" ], [ 3, "Gustav"], [ 4, "Heiner"],
+                    [5, "Amann"], [ 6, "Bemann"], [ 7, "Cemann"], [ 8, "Demann"],
+                    [9, "Inge" ], [10, "Josefa"], [11, "Klara" ], [12, "Luise" ] };
+    Married := {};
+    Names   := {};
+    for (U in solution) {
+        match (arb(U)) {
+        case @Ehe(x, y):  xName := Dictionary[x];
+                          yName := Dictionary[y];
+                          Married[xName] := yName;
+        case @Name(x, y): xName := Dictionary[x];
+                          yName := Dictionary[y];
+                          Names[xName] := yName;
+        }
+    }
+    for ([x, y] in Married) {
+        print("$x$ $Names[x]$ ist mit $y$ verheiratet.");
+    }
+};
+solve();
+
