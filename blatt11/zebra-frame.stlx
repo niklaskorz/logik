@@ -62,13 +62,14 @@ propVar := procedure(f, i) {
 onePerHouse := procedure(m) {
     // make use of the functions somewhere, someone, and atMostOneAt
     // that are defined below.
-    return "Your code here.";
+    return { somewhere(x) : x in m }
+        + +/ { atMostOneAt(m, i) : i in { 1 .. 5} };
 };
 // If this function is called as 
 //       somewhere("Briton")
 // it will generate a clause stating that the Briton lives in one ofthe five houses.
 somewhere := procedure(x) {
-    // Your code here.
+    return { propVar(x, i) : i in { 1 .. 5} };
 };
 // This procedure generates a clause that expresses that some variable from the set m 
 // is true for the index i.  For example, the call
@@ -77,7 +78,7 @@ somewhere := procedure(x) {
 // 
 // generates a clause expressing that somebody lives in the house with  number 2.
 someone := procedure(m, i) {
-    // Your code here.
+    return { propVar(x, i) : x in m };
 };
 // The argument m is a set of function symbols. For example,
 //
@@ -85,13 +86,13 @@ someone := procedure(m, i) {
 //
 // The argument i is an integer in the set {1..5}.  This variable represents
 // the number of a house.  Continuing the example, atMostOneAt(m, i) generates 
-// a set of clauses that is true iff at most one of the propositional variables
+// a set of clauses that is true if at most one of the propositional variables
 //
 //    German(i), Briton(i), Swede(i), Norwegian(i), American(i)
 //
 // is true.
 atMostOneAt := procedure(m, i) {
-    // your code here
+    return atMostOne(someone(m, i));
 };
 // This procedure can be called as sameHouse("Briton", "Red") to express
 // the fact that the Briton lives in the red house.
@@ -132,39 +133,41 @@ allClauses := procedure() {
     // nationality, one pet, smokes one brand of cigarettes, and has one type
     // of drink.  Furthermore, every house has exactly one color.
     clauses += onePerHouse({"German", "Briton", "Swede", "American", "Norwegian"});    
-    // more clauses here ...
-
-
+    clauses += onePerHouse({"Red", "Green", "White", "Blue", "Yellow"});    
+    clauses += onePerHouse({"Dunhill", "Camel", "Marlboro", "Winfield", "Rothmanns"});    
+    clauses += onePerHouse({"Dog", "Parrot", "Cat", "Pig", "Zebra"});    
+    clauses += onePerHouse({"Whiskey", "Coffee", "Beer", "Milk", "Water"});    
     
     // The Briton lives in the red house. 
-
+    clauses += sameHouse("Briton", "Red");
     // The Swede has a dog.
-
+    clauses += sameHouse("Swede", "Dog");
     // The American drinks whiskey.
-
+    clauses += sameHouse("American", "Whiskey");
     // The inhabitant of the green house drinks coffee.
-
+    clauses += sameHouse("Green", "Coffee");
     // The person who owns a parrot smokes Camel.
-
+    clauses += sameHouse("Parrot", "Camel");
     // The person in the yellow house smokes Dunhill.
-
+    clauses += sameHouse("Yellow", "Dunhill");
     // The person smoking Winfield drinks beer.
-
+    clauses += sameHouse("Winfield", "Beer");
     // The German smokes Rothmanns.
-
+    clauses += sameHouse("German", "Rothmanns");
     // The green house is left to the white house.
-
+    clauses += leftTo("Green", "White");
     // The inhabitant of the third house drinks milk.
-
+    clauses += parseKNF("@Milk(3)");
     // The Norwegian lives in the first house. 
-
+    clauses += parseKNF("@Norwegian(1)");
     // The person smoking Marlboro lives next to the person who owns a cat.
-
+    clauses += nextTo("Marlboro", "Cat");
     // The person with the pig lives next to the Dunhill smoker.
-
+    clauses += nextTo("Pig", "Dunhill");
     // The Norwegian lives next to the blue house.
-
+    clauses += nextTo("Norwegian", "Blue");
     // The Marlboro smoker lives next to the house where water is drunken.
+    clauses += nextTo("Marlboro", "Water");
 
     return clauses;
 };
