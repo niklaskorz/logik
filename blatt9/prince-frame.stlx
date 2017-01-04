@@ -42,7 +42,7 @@ exactlyOne := procedure(s) {
 // genau dann wahr, wenn in dem i-ten Zimmer ein Tiger ist.  Die Variable
 //     Z(i)    ist für i in { 1, ..., n }
 // genau dann wahr, wenn die Aufschrift des i-ten Zimmers wahr ist.  Die Variable
-//     W() 
+//     w
 // ist genau dann wahr, wenn alle Aufschriften an leeren Zimmern wahr sind.
 computeClauses := procedure() {
     n := 9;
@@ -55,7 +55,7 @@ computeClauses := procedure() {
     clauses += +/ { parseKNF("@T($i$) => !@Z($i$)") : i in { 1 .. n } } ;
     // 1. Zimmer: Prinzessin ist in einem Zimmer mit ungerader Zimmernummer.
     //            In den Zimmern mit gerader Nummer ist kein Tiger.
-    clauses += +/ { parseKNF("@Z(1) <==> (@P($i$) => $i$ % 2 != 0) && ($i$ % 2 == 0 => !@T($i$))") : i in { 1 .. n } };
+    clauses += parseKNF("@Z(1) <==> (" + join([@P(i) : i in { 1 .. n } | i % 2 != 0], " || ") + ") && !(" + join([@T(i) : i in { 1 .. n } | i % 2 == 0], "||") + ")");
     // 2. Zimmer: Dieses Zimmer ist leer.
     clauses += parseKNF("@Z(2) <==> !@P(2) && !@T(2)");
     // 3. Zimmer: Die Aufschrift an Zimmer 5 ist wahr, die Aufschrift an Zimmer 7 ist falsch
@@ -79,7 +79,7 @@ computeClauses := procedure() {
     clauses += parseKNF("@Z(9) <==> !T(9) && !@T(1) && @Z(6)");
     // Entweder sind alle Aufschriften an leeren Zimmern wahr, oder alle Aufschriften an
     // leeren Zimmern sind falsch.
-    clauses += +/ { parseKNF("(!@P($i$) && !@T($i$)) => @Z($i$) == @W()") : i in { 1 .. n } };
+    clauses += +/ { parseKNF("(!@P($i$) && !@T($i$)) => (@Z($i$) <==> w") : i in { 1 .. n } };
     return clauses;
 };
 
