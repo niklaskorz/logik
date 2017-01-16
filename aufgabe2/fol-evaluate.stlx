@@ -60,71 +60,27 @@ modify := procedure(I, v, c) {
     I[x] := c;
     return I;
 };
-////////////////////////////////////////////////////////////////////////////////
-//                                                                            //
-// Below are some examples of structures and formula.                         //
-//                                                                            //
-////////////////////////////////////////////////////////////////////////////////
 
-// A simple commutative group with two elements a and b.
-// The following definitions of the variables a and b are just a convenience.
-a := "a";
-b := "b";
-U := { a, b };  // the universe
-// product is the interpretation of the function symbol "*".
-product := { [ [ a, a ], a ],  [ [ a, b ], b ],  [ [ b, a ], b ],  [ [ b, b ], a ] };
-// equals is the interpretation of the predicate symbol "==".
-equals := { [ x, x ] : x in U };
-// The structure consists of the universe and the interpretation of
-// the function and predicate symbols.
-J := { [ "E", a ], [ "@@@product", product ], [ "@@@equals", equals ] };
-S := [ U, J ];
-// i is a variable assignment.
-I := { [ "x", a ], [ "y", b ], [ "z", a ] };
+//////
 
 // Formel für Aufgabe 2
-F := parse("@Forall(x, @Exists(y, p(x, y))) => @Exists(y, @Forall(x, p(x, y)))")
-
-
-// The following formulas are the axioms of commutative group theory.
-g1 := parse("@Forall(x, x * @E() == x)");
-g2 := parse("@Forall(x, @Exists(y, x * y == @E()))");
-g3 := parse("@Forall(x, @Forall(y, @Forall(z, (x*y)*z == x*(y*z) )))");
-g4 := parse("@Forall(x, @Forall(y, x * y == y * x))");
-GT := { g1, g2, g3, g4 };
-
-print("\nchecking group theory in the structure \n", S);
-for (f in GT) {
-    print( "checking $f$: $evalFormula(f, S, I)$" );
-}
-
-// A non-commutative group with 6 elements a0, a1, a2, a3, a4, a5. 
-a0 := "a0";
-a1 := "a1";
-a2 := "a2";
-a3 := "a3";
-a4 := "a4";
-a5 := "a5";
-U  := { a0, a1, a2, a3, a4, a5 };  // the universe
-// product is the interpretation of the function symbol "*".
-product := { 
- [[a0, a0], a0], [[a0, a1], a1], [[a0, a2], a2], [[a0, a3], a3], [[a0, a4], a4], [[a0, a5], a5],
- [[a1, a0], a1], [[a1, a1], a2], [[a1, a2], a0], [[a1, a3], a5], [[a1, a4], a3], [[a1, a5], a4],
- [[a2, a0], a2], [[a2, a1], a0], [[a2, a2], a1], [[a2, a3], a4], [[a2, a4], a5], [[a2, a5], a3],
- [[a3, a0], a3], [[a3, a1], a4], [[a3, a2], a5], [[a3, a3], a0], [[a3, a4], a1], [[a3, a5], a2],
- [[a4, a0], a4], [[a4, a1], a5], [[a4, a2], a3], [[a4, a3], a2], [[a4, a4], a0], [[a4, a5], a1],
- [[a5, a0], a5], [[a5, a1], a3], [[a5, a2], a4], [[a5, a3], a1], [[a5, a4], a2], [[a5, a5], a0]
-};
-// equals is the interpretation of the predicate symbol "==".
+n := 3;
+U := { "x$i$" : i in { 1 .. n } };
+print(U);
 equals := { [ x, x ] : x in U };
-// The structure consists of the universe and the interpretation of
-// the function and predicate symbols.
-S := [ U, { [ "E", a0 ], [ "@@@product", product ], [ "@@@equals", equals ] } ];
-// I is a variable assignment.
-I := { [ "x", a0 ], [ "y", a1 ], [ "z", a2 ] }; 
-
-print("\nchecking group theory in the structure \n", S);
-for (f in GT) {
-    print( "checking ", f, ": ", evalFormula(f, S, I) );
+J := { [ "p", equals ] };
+S := [ U, J ];
+AllI := { { ["x", x], ["y", y] } : x in U, y in U };
+f := parse("@Forall(x, @Exists(y, @p(x, y))) => @Exists(y, @Forall(x, @p(x, y)))");
+print("Checking A2");
+isTrue := false;
+for (I in AllI) {
+    print("Checking for: ", I);
+    if (evalFormula(f, S, I)) {
+        isTrue := true;
+        print("True for: ", I);
+    }
 }
-
+print("isTrue: ", isTrue);
+I := { [x, x] : x in U };
+print("isTrue: ", evalFormula(f, S, I));
